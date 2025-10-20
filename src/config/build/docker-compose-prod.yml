@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:16
+    container_name: task_postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: task_manager
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d task_manager || exit 1']
+      interval: 3s
+      timeout: 5s
+      retries: 15
+      start_period: 5s
+
+  app:
+    build:
+      context: ../../..
+      dockerfile: src/config/build/Dockerfile
+    container_name: nest_app
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '3001:3001'
+    environment:
+      DATABASE_URL: 'postgresql://postgres:postgres@db:5432/task_manager?schema=public'
+      SEED_ADMIN_NAME: 'Admin'
+      SEED_ADMIN_EMAIL: 'admin@admin.com'
+      SEED_ADMIN_PASSWORD: 'taskadmin.123'
+      PRISMA_CLIENT_ENGINE_STARTUP_TIMEOUT: '60000'
+    command: >
+      sh -c "
+        echo '🔎 Esperando porta do DB (db:5432)...' &&
+        until node -e '
+          const net = require(\"net\");
+          const s = net.createConnection(5432, \"db\");
+          s.on(\"connect\", () => { s.end(); process.exit(0); });
+          s.on(\"error\", () => { process.exit(1); });
+        '; do
+          echo '⏳ Aguardando DB aceitar conexões TCP...'; sleep 2;
+        done &&
+        echo '✅ Porta aberta. Rodando migrations...' &&
+        npx prisma migrate deploy &&
+        echo '🌱 Rodando seed...' &&
+        npx prisma db seed &&
+        echo '🚀 Iniciando app...' &&
+        npm run start:prod
+      "
+
+volumes:
+  postgres_data:

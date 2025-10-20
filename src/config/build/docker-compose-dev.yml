@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16
+    container_name: nest_dev_postgres_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: task_manager
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+
+  app:
+    image: node:20
+    user: "node"
+    container_name: nest_dev_app
+    working_dir: /app
+    depends_on:
+      - db
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/task_manager?schema=public
+    ports:
+      - "3001:3001"
+    volumes:
+      - ../../../:/app
+      - /app/node_modules
+      - /app/dist
+    command: >
+      sh -c "npm install &&
+            npx prisma generate &&
+            npx prisma migrate dev &&
+            npx nest start --watch"
+
+volumes:
+  postgres_data_dev:
