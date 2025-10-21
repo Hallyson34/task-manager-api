@@ -188,4 +188,10 @@ No `docker-compose-prod.yml`, variável `DATABASE_URL` do serviço `app`.
 - **Dev (compose dedicado opcional):** `docker compose -f src/config/build/docker-compose-dev.yml up --build`
 - **Prod:** `docker compose -f src/config/build/docker-compose-prod.yml up -d --build`
 
-Pronto! Sua API NestJS com Prisma + Postgres está **pronta para rodar** em dev e prod de forma previsível e reproduzível. 🚀
+## 👨‍💻 Autor
+
+**Hallyson Nobres**  
+💼 Desenvolvedor Full-Stack  
+📧 [hallysonnobres@gmail.com](mailto:hallysonnobres@gmail.com)  
+🌐 [LinkedIn](https://www.linkedin.com/in/hallyson-nobres)
+
